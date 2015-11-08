@@ -1,0 +1,13 @@
+runs: 1
+growthRate {
+  set: 10.5
+}
+
+raster_dir {
+  set_string: C:/Users/Sara/Downloads/ABM_SB/ABM_SB
+}
+
+outputDir {
+  set_string: C:/Users/Sara/Documents/ANTH206
+}
+

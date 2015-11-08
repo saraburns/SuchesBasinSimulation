@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+
+<!-- Evolver Model Specification File -->
+<RePastEvolver:EvolverModelSpec xmlns:RePastEvolver="http://src.uchicago.edu/simbuilder/">
+<RePastEvolver:EvolverProject  ProjectDirectory="C:\Repast 3\Agent Analyst\output" PackageName="default_package" ProjectName="Environment" ClassPath="" consoleErr="true" consoleOut="true" >
+<Description>
+<![CDATA[
+
+]]>
+</Description>
+<RePastEvolver:EvolverModel  ModelName="GISModel" DisplayName="GIS Model" Class="class uchicago.src.simbuilder.beans.gis.DefaultGISModelProducer" gisPackage="ArcGIS" >
+  <RePastEvolver:action name="initAgents" sigReadOnly="true" retType="void" imports="" paramNames="">
+<![CDATA[
+def initAgents():
+  if(self.numActive < 5):
+    print "initAgents"
+    count = 0
+    for e as Estancia in self.Estancias:
+      e.herdSize = Random.uniform.nextIntFromTo(2, 20)
+      e.id = count
+      count = count + 1
+      e.active = true
+      print e.herdSize
+    numActive = count
+    print "setting numActive to ", numActive
+    for i in range(count,200):
+      e = Estancia()
+      e.id = count
+      e.active = false
+      count = count + 1
+      self.Estancias.add(e)
+      current = (Estancia) self.Estancias[count-1]
+      print "initializing extra estancia w/ id: ", current.id, current.active
+    print "now, numActive is", numActive
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="updateDisplay" sigReadOnly="true" retType="void" imports="" paramNames="">
+<![CDATA[
+def updateDisplay():
+  self.updateGISDisplay()
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="writeAgents" sigReadOnly="true" retType="void" imports="" paramNames="">
+<![CDATA[
+def writeAgents():
+  activeAgents = ArrayList()
+  for i in range(5):
+    activeAgents.add(self.Estancias[i])
+  self.writeAgents(activeAgents, "C:\ESRIPress\AgentAnalyst\Chapter02\Data\Formative_PALSPAQT.shp")
+  print "wrote agents"
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="loadRaster" sigReadOnly="false" retType="void" imports="" paramNames="">
+<![CDATA[
+def loadRaster():
+  suitability_raster = ESRIRaster(self.raster_dir, "suit_score")
+  #suitability_raster.saveAs(self.outputDir, "saveto_suit_score")
+  #suitability_raster = ESRIRaster(self.outputDir, "saveto_suit_score")
+  self.addRaster("suitability", suitability_raster)
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="checkIfPacked" sigReadOnly="false" retType="void" imports="" paramNames="">
+<![CDATA[
+def checkIfPacked():
+  unpackedCount = 0
+  for e as Estancia in self.Estancias:
+    if e.atCapacity == 0:
+      unpackedCount = unpackedCount + 1
+  if unpackedCount == 0:
+    print "everyone is packed"
+    self.stop()
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="addAgent" sigReadOnly="false" retType="void" imports="" paramNames="">
+<![CDATA[
+def addAgent():
+  print "numActive " , self.numActive
+  firstInactive = (Estancia) self.Estancias[self.numActive - 1]
+  print "First inactive: ", firstInactive.id
+]]>
+</RePastEvolver:action>
+
+
+<RePastEvolver:parameter name="growthRate" type="float" defaultValue="10.5" probe="true" accessible="true" />
+<RePastEvolver:parameter name="raster_dir" type="java.lang.String" defaultValue="&quot;C:/Users/Sara/Downloads/ABM_SB/ABM_SB&quot;" probe="true" accessible="true" />
+<RePastEvolver:parameter name="outputDir" type="java.lang.String" defaultValue="&quot;C:/Users/Sara/Documents/ANTH206&quot;" probe="true" accessible="true" />
+<RePastEvolver:parameter name="numActive" type="int" defaultValue="0" probe="false" accessible="true" />
+
+
+<RePastEvolver:schedule order="4 1 6" />
+<RePastEvolver:schedule order="0" />
+<RePastEvolver:schedule order="2" />
+<RePastEvolver:schedule order="5" />
+<RePastEvolver:schedule order="3" />
+<RePastEvolver:schedule_item action="updateDisplay" tick="20.0" type="2" last="false" target="GISModel" id="2"/>
+<RePastEvolver:schedule_item action="loadRaster" tick="0.1" type="3" last="false" target="GISModel" id="3"/>
+<RePastEvolver:schedule_item action="checkIfPacked" tick="1.0" type="1" last="false" target="GISModel" id="4"/>
+<RePastEvolver:schedule_item action="writeAgents" tick="10.0" type="2" last="false" target="GISModel" id="5"/>
+
+<RePastEvolver:EvolverBean type="Compileable" class="class uchicago.src.simbuilder.beans.gis.VectorAgentProducer" name="Estancia" groupName="Estancias">
+<VectorDataSource shapefile="C:\Users\Sara\Documents\ANTH 206\Formative_PALSPAQT.shp" displayField="Alt_name" gisPackage="ArcGIS">
+<VectorDataSourceDisplayValue field="default value" color="-65536" isDefault="true" thickness="1" />
+</VectorDataSource>
+
+  <RePastEvolver:action name="step" sigReadOnly="true" retType="void" imports="" paramNames="">
+<![CDATA[
+def step():
+  if(self.active):
+    point = self.the_geom.coordinate
+    if(self.herdSize < 200):
+      self.herdSize = self.herdSize + int(self.herdSize * (self.model.growthRate/100))
+    print self.id, self.the_geom, self.herdSize, self.atCapacity
+  #else:
+    #suitability = self.model.getRaster("suitability")
+    #currentVal = suitability.getPixelValueAtMap(point.x, point.y, 0)
+    #suitability.writePixelValue(currentVal * 0.99, int(point.x), int(point.y), 0)
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="moveDecision" sigReadOnly="false" retType="void" imports="java.util.concurrent.locks.Lock" paramNames="">
+<![CDATA[
+def moveDecision():
+  if(self.herdSize > 200):
+    print "time to move"
+     #idea: select a random x and y location > 2.5 km away from any other herders
+    self.findAvailableLand()
+    raster = self.model.getRaster("suitability")
+    for coordinate in self.ring.getCoordinates():
+      print "Point in range: ", coordinate.x, coordinate.y
+      suit_score = raster.getPixelValueAtMap(self.ring.getCoordinate().x, self.ring.getCoordinate().y, 0)
+      print suit_score
+      if(suit_score > 15):
+        factory = self.the_geom.getFactory()
+        builder = GeometryBuilder(factory)
+        builder.addCoordinate(coordinate.x + 2500, coordinate.y)
+        builder.addCoordinate(coordinate.x + 2500, coordinate.y + 2500)
+        builder.addCoordinate(coordinate.x - 2500, coordinate.y)
+        builder.addCoordinate(coordinate.x - 2500, coordinate.y - 2500)
+        radius = builder.createPolygon()
+        validCoord = true
+        activeAgents = ArrayList()
+        for e as Estancia in self.model.Estancias:
+          if (e.active): activeAgents.add(e)
+        for e as Estancia in activeAgents:
+          if(not e.equals(self) and radius.contains(e.the_geom)):
+            validCoord = false 
+        if(validCoord):
+          print "found a valid location for estancia to expand"
+          self.model.addAgent()
+          offspring = (Estancia) self.model.Estancias[self.model.Estancias.size()-1]
+          #offspring.the_geom.coordinate.x = coordinate.x
+          #offspring.the_geom.coordinate.y = coordinate.y
+          #offspring.herdSize = self.herdSize/2
+          self.herdSize = self.herdSize/2
+          break
+        else:
+          print "too close to other herds"
+      else:
+        print "suitability too low"
+  #find a point in that land
+  #check out JST documentation
+  #once you choose a point, check the suitability score, and search if there are any other estancias within a 2.5 km radius(call get Available Land again)
+  # but < 5 km with a suitability score
+  #atleast 25
+]]>
+</RePastEvolver:action>
+
+  <RePastEvolver:action name="findAvailableLand" sigReadOnly="false" retType="void" imports="" paramNames="">
+<![CDATA[
+def findAvailableLand():
+  coordinate = self.the_geom.coordinate
+  factory = self.the_geom.getFactory()
+  builder = GeometryBuilder(factory)
+  builder.addCoordinate(coordinate.x + 5000, coordinate.y)
+  builder.addCoordinate(coordinate.x + 5000, coordinate.y + 5000)
+  builder.addCoordinate(coordinate.x - 5000, coordinate.y)
+  builder.addCoordinate(coordinate.x - 5000, coordinate.y - 5000)
+  builder.addCoordinate(coordinate.x + 2500, coordinate.y)
+  builder.addCoordinate(coordinate.x + 2500, coordinate.y + 2500)
+  builder.addCoordinate(coordinate.x - 2500, coordinate.y)
+  builder.addCoordinate(coordinate.x - 2500, coordinate.y - 2500)
+  self.ring = builder.createPolygon()
+]]>
+</RePastEvolver:action>
+
+
+<RePastEvolver:parameter name="herdSize" type="int" defaultValue="" probe="true" accessible="true" />
+<RePastEvolver:parameter name="ring" type="com.vividsolutions.jts.geom.Polygon" defaultValue="" probe="false" accessible="true" />
+<RePastEvolver:parameter name="id" type="int" defaultValue="" probe="true" accessible="true" />
+<RePastEvolver:parameter name="active" type="boolean" defaultValue="false" probe="false" accessible="true" />
+
+<RePastEvolver:schedule_item action="moveDecision" tick="15.0" type="2" last="false" target="for all Estancia" id="0"/>
+<RePastEvolver:schedule_item action="step" tick="1.0" type="1" last="false" target="for all Estancia" id="1"/>
+
+</RePastEvolver:EvolverBean>
+
+
+</RePastEvolver:EvolverModel>
+</RePastEvolver:EvolverProject>
+</RePastEvolver:EvolverModelSpec>
