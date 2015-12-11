@@ -1,0 +1,3 @@
+201010301719   0     1     0bvining PRED9 = sum (rcls_acc2, rcls_aspe, rcls_dem, rcls_distbof, rcls_diststr, rcls_inso, rcls_slop2, rcls_veg)
+201011081607   0     0     0bvining BUILDSTA pred9
+20150511 104   0     0     0Sara C:\Users\Sara\AppData\Local\ESRI\DESKTO~1.2\SPATIA~1\RasterT_suit_sc1.asc = GRIDASCII ( C:\Users\Sara\Downloads\ABM_SB\ABM_SB\su
