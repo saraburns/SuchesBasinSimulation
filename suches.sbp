@@ -21,8 +21,8 @@ def initAgents():
       count = count + 1
       e.active = true
       print e.herdSize
-    numActive = count
-    print "setting numActive to ", numActive
+    self.numActive = count 
+    print "setting numActive to ", self.numActive
     for i in range(count,200):
       e = Estancia()
       e.id = count
@@ -31,7 +31,7 @@ def initAgents():
       self.Estancias.add(e)
       current = (Estancia) self.Estancias[count-1]
       print "initializing extra estancia w/ id: ", current.id, current.active
-    print "now, numActive is", numActive
+    print "now, numActive is", self.numActive
 ]]>
 </RePastEvolver:action>
 
@@ -80,8 +80,11 @@ def checkIfPacked():
 <![CDATA[
 def addAgent():
   print "numActive " , self.numActive
-  firstInactive = (Estancia) self.Estancias[self.numActive - 1]
+  firstInactive = (Estancia) self.Estancias[self.numActive]
   print "First inactive: ", firstInactive.id
+  self.numActive = self.numActive + 1
+  firstInactive.active = true
+  
 ]]>
 </RePastEvolver:action>
 
@@ -92,7 +95,7 @@ def addAgent():
 <RePastEvolver:parameter name="numActive" type="int" defaultValue="0" probe="false" accessible="true" />
 
 
-<RePastEvolver:schedule order="4 1 6" />
+<RePastEvolver:schedule order="4 1" />
 <RePastEvolver:schedule order="0" />
 <RePastEvolver:schedule order="2" />
 <RePastEvolver:schedule order="5" />
@@ -111,10 +114,15 @@ def addAgent():
 <![CDATA[
 def step():
   if(self.active):
-    point = self.the_geom.coordinate
+    print "starting step"
+    print "Herd size: ", self.herdSize
     if(self.herdSize < 200):
-      self.herdSize = self.herdSize + int(self.herdSize * (self.model.growthRate/100))
-    print self.id, self.the_geom, self.herdSize, self.atCapacity
+      self.herdSize = self.herdSize + int(self.herdSize * (10.5/100))
+    print "getting id" 
+    print self.id
+    print self.the_geom
+    print self.herdSize
+    print self.atCapacity
   #else:
     #suitability = self.model.getRaster("suitability")
     #currentVal = suitability.getPixelValueAtMap(point.x, point.y, 0)
@@ -125,7 +133,7 @@ def step():
   <RePastEvolver:action name="moveDecision" sigReadOnly="false" retType="void" imports="java.util.concurrent.locks.Lock" paramNames="">
 <![CDATA[
 def moveDecision():
-  if(self.herdSize > 200):
+  if(self.herdSize != None and self.herdSize > 200):
     print "time to move"
      #idea: select a random x and y location > 2.5 km away from any other herders
     self.findAvailableLand()
@@ -151,11 +159,15 @@ def moveDecision():
             validCoord = false 
         if(validCoord):
           print "found a valid location for estancia to expand"
-          self.model.addAgent()
-          offspring = (Estancia) self.model.Estancias[self.model.Estancias.size()-1]
-          #offspring.the_geom.coordinate.x = coordinate.x
-          #offspring.the_geom.coordinate.y = coordinate.y
-          #offspring.herdSize = self.herdSize/2
+          print "numActive " , self.model.numActive
+          firstInactive = (Estancia) self.model.Estancias[self.model.numActive]
+          self.model.numActive = self.model.numActive + 1
+          print "offspring : " , firstInactive.id
+          firstInactive.the_geom = factory.createPoint(coordinate)
+          print "offspring geom : " , firstInactive.the_geom
+          print "offspring coord : ", firstInactive.the_geom.coordinate
+          firstInactive.herdSize = self.herdSize/2
+          firstInactive.active = true
           self.herdSize = self.herdSize/2
           break
         else:
